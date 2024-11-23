@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Flight Search</string>
+    <string name="search">Search</string>
+    <string name="voice">Voice</string>
+    <string name="depart">Depart</string>
+    <string name="arrive">Arrive</string>
+    <string name="favorite">Favorite</string>
+    <string name="enter_airport">Enter departure airport</string>
+    <string name="flights_from">Flights from %s</string>
+    <string name="please_enter_text">Please enter at least 3 characters in the search bar. For example: int</string>
+    <string name="favorite_routes">Favorite routes</string>
+    <string name="back_button">Back button</string>
+</resources>
