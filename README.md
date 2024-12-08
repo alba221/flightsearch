@@ -1,7 +1,7 @@
 Flight Search app
 =====================
 
-This code is the solution for Android Basics with Compose Codelab, Unit 6: Data persistence, PATHWAY 3, Project: Create a flight search app
+This code is the solution for Codelab which is part of Training Course - Android Basics with Compose, Unit 6: Data persistence, PATHWAY 3, Project: Create a flight search app.
 Consider this solution as one way to implement the app.
 
 Introduction
