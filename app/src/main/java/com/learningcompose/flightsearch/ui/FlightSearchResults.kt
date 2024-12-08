@@ -25,17 +25,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.learningcompose.flightsearch.R
 import com.learningcompose.flightsearch.data.Airport
-import com.learningcompose.flightsearch.data.Favorite
+
+object FlightResultsDestination : NavigationDestination {
+    override val route = "flight_search_results"
+    const val iAtaCode = "iata_code"
+    val routeWithArgs = "$route/{$iAtaCode}"
+}
 
 /** Search results from Room DB */
 @Composable
 fun FlightSearchResults(
-    airportDepart: Airport?,
-    airports: List<Airport>,
-    favoriteRoutes: List<Favorite>,
-    selectedAirportIAtaCode: String,
-    insertFavorite: (Favorite) -> Unit,
-    deleteFavorite: (Favorite) -> Unit,
+    flights: List<FlightDetail>,
+    selectedAirport: Airport,
+    onClickFavorite: (FlightDetail) -> Unit,
     onBackHandler: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -45,18 +47,9 @@ fun FlightSearchResults(
     }
 
     FlightSearchScreen(
-        selectedAirportIAtaCode = selectedAirportIAtaCode,
-        airportDepart = airportDepart,
-        airports = airports,
-        favoriteRoutes = favoriteRoutes,
-        onClickFavorite = { favorite, airportDepart, airportArrive ->
-            if (isFavoriteRoute(airportDepart, airportArrive, favoriteRoutes)) {
-                deleteFavorite(favorite)
-            } else {
-                insertFavorite(favorite)
-            }
-
-        },
+        selectedAirportIAtaCode = selectedAirport.iAtaCode,
+        flights = flights,
+        onClickFavorite = onClickFavorite,
         modifier = modifier
     )
 }
@@ -64,10 +57,8 @@ fun FlightSearchResults(
 @Composable
 fun FlightSearchScreen(
     selectedAirportIAtaCode: String,
-    airportDepart: Airport?,
-    airports: List<Airport>,
-    favoriteRoutes: List<Favorite>,
-    onClickFavorite: (Favorite, Airport, Airport) -> Unit,
+    flights: List<FlightDetail>,
+    onClickFavorite: (FlightDetail) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -79,16 +70,12 @@ fun FlightSearchScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            itemsIndexed(airports) { index, airport ->
-                if (airport.iAtaCode != selectedAirportIAtaCode) {
-                    FlightCard(
-                        airportDepart = airportDepart,
-                        airportArrive = airport,
-                        isFavorite = isFavoriteRoute(airportDepart, airport, favoriteRoutes),
-                        onClickFavorite = onClickFavorite,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+            itemsIndexed(flights) { index, flight ->
+                FlightCard(
+                    flight = flight,
+                    onClickFavorite = onClickFavorite,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
     }
@@ -96,10 +83,8 @@ fun FlightSearchScreen(
 
 @Composable
 fun FlightCard(
-    airportDepart: Airport?,
-    airportArrive: Airport,
-    isFavorite: Boolean = false,
-    onClickFavorite: (Favorite, Airport, Airport) -> Unit,
+    flight: FlightDetail,
+    onClickFavorite: (FlightDetail) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -115,26 +100,22 @@ fun FlightCard(
             ) {
                 FlightDetailRow(
                     flightType = R.string.depart,
-                    airportDepart ?: defaultAirport
+                    flight.airportDepart
                 )
                 FlightDetailRow(
                     R.string.arrive,
-                    airportArrive
+                    flight.airportArrive
                 )
             }
             IconButton(
                 onClick = {
-                    onClickFavorite(
-                        Favorite(0, airportDepart?.iAtaCode ?: "", airportArrive.iAtaCode),
-                        airportDepart ?: defaultAirport,
-                        airportArrive
-                    )
+                    onClickFavorite(flight)
                 }
             ) {
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = stringResource(R.string.favorite),
-                    tint = if (isFavorite) {
+                    tint = if (flight.isFavorite) {
                         MaterialTheme.colorScheme.tertiary
                     } else {
                         MaterialTheme.colorScheme.outline
@@ -176,16 +157,3 @@ fun FlightDetailRow(
     }
 }
 
-fun isFavoriteRoute(
-    airportDepart: Airport?,
-    airportArrive: Airport,
-    favoriteRoutes: List<Favorite>
-): Boolean {
-    for (route in favoriteRoutes) {
-        if (airportDepart?.iAtaCode == route.departureCode
-            && airportArrive.iAtaCode == route.destinationCode) {
-            return true
-        }
-    }
-    return false
-}

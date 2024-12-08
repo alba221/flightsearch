@@ -21,28 +21,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.learningcompose.flightsearch.R
-import com.learningcompose.flightsearch.data.Airport
-import com.learningcompose.flightsearch.data.Favorite
 
 /** Favorite routes (flights) */
 @Composable
 fun FlightSearchFavoriteRoutes(
-    airports: List<Airport>,
-    favoriteRoutes: List<Favorite>,
-    onClickFavorite: (Favorite, Airport, Airport) -> Unit,
+    flights: List<FlightDetail>,
+    onClickFavorite: (FlightDetail) -> Unit,
     searchText: String,
     navController: NavHostController,
     onBackHandler: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
-    if (searchText.isEmpty() && navController.isOnBackStack(PageType.AutocompleteList.name)) {
+    if (searchText.isEmpty() && navController.isOnBackStack(FlightAutocompleteDestination.route)) {
         onBackHandler()
-        navController.navigate(PageType.AutocompleteList.name) {
+        navController.navigate(FlightAutocompleteDestination.route) {
             launchSingleTop = true
         }
     }
 
+    /** If in Preview mode don't show animation. */
     val inPreviewMode = LocalInspectionMode.current
     val visibleState = remember {
         MutableTransitionState(inPreviewMode).apply {
@@ -50,7 +48,7 @@ fun FlightSearchFavoriteRoutes(
         }
     }
 
-    if (!favoriteRoutes.isEmpty()) {
+    if (!flights.isEmpty()) {
         Column(modifier = modifier) {
             Text(
                 text = stringResource(R.string.favorite_routes),
@@ -60,9 +58,7 @@ fun FlightSearchFavoriteRoutes(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                itemsIndexed(favoriteRoutes) { index, route ->
-                    val airportDepart = getAirportByIAtaCode(route.departureCode, airports)
-                    val airportArrive = getAirportByIAtaCode(route.destinationCode, airports)
+                itemsIndexed(flights) { index, flight ->
                     AnimatedVisibility(
                         visibleState = visibleState,
                         enter = slideInVertically(
@@ -74,25 +70,13 @@ fun FlightSearchFavoriteRoutes(
                         )
                     ) {
                         FlightCard(
-                            airportDepart = airportDepart,
-                            airportArrive = airportArrive,
-                            isFavorite = isFavoriteRoute(airportDepart, airportArrive, favoriteRoutes),
+                            flight = flight,
                             onClickFavorite = onClickFavorite,
                             modifier = Modifier.padding(16.dp)
                         )
                     }
-
                 }
             }
         }
     }
-}
-
-private fun getAirportByIAtaCode(iAtaCode: String, airports: List<Airport>): Airport {
-    for (airport in airports) {
-        if (airport.iAtaCode == iAtaCode) {
-            return airport
-        }
-    }
-    return defaultAirport
 }

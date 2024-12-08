@@ -3,7 +3,7 @@ package com.learningcompose.flightsearch.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring.DampingRatioLowBouncy
-import androidx.compose.animation.core.Spring.StiffnessLow
+import androidx.compose.animation.core.Spring.StiffnessVeryLow
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.clickable
@@ -21,33 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import com.learningcompose.flightsearch.data.Airport
+
+object FlightAutocompleteDestination : NavigationDestination {
+    override val route = "flight_search_autocomplete"
+}
 
 /** Autocomplete list based on user text Search input */
 @Composable
-fun FlightSearchAutocomplete(
-    airportSearchList: List<Airport>,
-    setPage: () -> Unit,
-    setSelectedAirport: (Airport) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AutocompleteItems(
-        airportList = airportSearchList,
-        setPage = setPage,
-        setSelectedAirport = setSelectedAirport,
-        modifier = modifier
-    )
-}
-
-@Composable
-fun AutocompleteItems(
-    airportList: List<Airport>,
-    setPage: () -> Unit,
-    setSelectedAirport: (Airport) -> Unit,
+fun FlightSearchAutocompleteItems(
+    airportSearchList: List<AirportAutocomplete>,
+    navigateToFlights: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    /** If in Preview mode don't show animation. */
     val inPreviewMode = LocalInspectionMode.current
     val visibleState = remember {
         MutableTransitionState(inPreviewMode).apply {
@@ -59,7 +47,7 @@ fun AutocompleteItems(
         visibleState = visibleState,
         enter = slideInHorizontally(
             animationSpec = spring(
-                stiffness = StiffnessLow,
+                stiffness = StiffnessVeryLow,
                 dampingRatio = DampingRatioLowBouncy
             )
         )
@@ -69,15 +57,14 @@ fun AutocompleteItems(
                 .padding(horizontal = 24.dp)
                 .imePadding()
         ) {
-            itemsIndexed(airportList) { index, airport ->
+            itemsIndexed(airportSearchList) { index, airport ->
                 Row(
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .fillMaxWidth()
                         .clickable(
                             onClick = {
-                                setPage()
-                                setSelectedAirport(airport)
+                                navigateToFlights(airport.iAtaCode)
                                 keyboardController?.hide()
                             }
                         )
@@ -87,7 +74,7 @@ fun AutocompleteItems(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = airport.name,
+                        text = airport.airportName,
                         Modifier.padding(horizontal = 8.dp)
                     )
                 }
