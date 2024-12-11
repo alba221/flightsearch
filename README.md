@@ -24,3 +24,8 @@ Getting Started
 ---------------
 
 1. Download and run the app.
+
+App Demo
+---------------
+![Screen_recording_20241211_093109](https://github.com/user-attachments/assets/e9e0dbc3-af6b-4ca6-923d-71a60870472b)
+
