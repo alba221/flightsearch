@@ -105,7 +105,7 @@ fun FlightSearchHomeScreen(
                     ) { navBackStackEntry ->
                         val iAtaCode = navBackStackEntry.arguments?.getString(FlightResultsDestination.iAtaCode) ?: ""
                         LaunchedEffect(Unit) {
-                            viewModel.loadFlights(iAtaCode)
+                            viewModel.setSelectedAirport(iAtaCode)
                         }
                         FlightSearchResults(
                             flights = homeUiState.flights,

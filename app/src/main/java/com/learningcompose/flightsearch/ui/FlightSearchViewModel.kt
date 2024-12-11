@@ -41,6 +41,8 @@ data class HomeUiState(
     val flights: List<FlightDetail> = emptyList(),
     val favoriteRoutes: List<FlightDetail> = emptyList(),
     val autocompleteList: List<AirportAutocomplete> = emptyList(),
+    val airports: List<Airport> = emptyList(),
+    val favorites: List<Favorite> = emptyList(),
     val selectedDepartAirport: Airport? = null,
     val errorMessage: String? = null
 )
@@ -75,7 +77,7 @@ class FlightSearchViewModel(
                 }
             }
         }
-        getFavorites()
+        loadFlights()
     }
 
     fun updateSearchText(newSearchText: String) {
@@ -103,41 +105,34 @@ class FlightSearchViewModel(
         }
     }
 
-    fun loadFlights(iAtaCode: String) {
-        setSelectedAirport(iAtaCode)
+    fun updateFlightsState() {
         viewModelScope.launch {
-            combineFlows(
-                flightSearchRepository.getAllAirports(),
-                flightSearchRepository.getAllFavorite()
-            ).catch { ex -> _homeUiState.value = HomeUiState(errorMessage = ex.message) }
-                .collect { (airports, favorites) ->
-                    val airportDepart = _homeUiState.value.selectedDepartAirport
-                    airportDepart?.let {
-                        /** All possible flights for selected airport including favorites */
-                        val flights = mutableListOf<FlightDetail>()
-                        airports.forEach { airport ->
-                            /** Depart airport has flights to every other airport except for itself */
-                            if (airportDepart.iAtaCode != airport.iAtaCode) {
-                                val favoriteFlight = favorites.find {
-                                    it.departureCode == airportDepart.iAtaCode &&
-                                            it.destinationCode == airport.iAtaCode
-                                }
-                                flights.add(FlightDetail(
-                                    airportDepart = airportDepart,
-                                    airportArrive = airport,
-                                    isFavorite = favoriteFlight != null
-                                ))
-                            }
+            val airportDepart = _homeUiState.value.selectedDepartAirport
+            airportDepart?.let {
+                /** All possible flights for selected airport including favorites */
+                val flights = mutableListOf<FlightDetail>()
+                _homeUiState.value.airports.forEach { airport ->
+                    /** Depart airport has flights to every other airport except for itself */
+                    if (airportDepart.iAtaCode != airport.iAtaCode) {
+                        val favoriteFlight = _homeUiState.value.favorites.find {
+                            it.departureCode == airportDepart.iAtaCode &&
+                                    it.destinationCode == airport.iAtaCode
                         }
-                        _homeUiState.update {
-                            it.copy(flights = flights)
-                        }
+                        flights.add(FlightDetail(
+                            airportDepart = airportDepart,
+                            airportArrive = airport,
+                            isFavorite = favoriteFlight != null
+                        ))
                     }
                 }
+                _homeUiState.update {
+                    it.copy(flights = flights)
+                }
+            }
         }
     }
 
-    fun getFavorites() = viewModelScope.launch {
+    fun loadFlights() = viewModelScope.launch {
         combineFlows(
             flightSearchRepository.getAllAirports(),
             flightSearchRepository.getAllFavorite()
@@ -155,8 +150,13 @@ class FlightSearchViewModel(
                     ))
                 }
                 _homeUiState.update {
-                    it.copy(favoriteRoutes = favoriteFlights)
+                    it.copy(
+                        airports = airports,
+                        favorites = favorites,
+                        favoriteRoutes = favoriteFlights
+                    )
                 }
+                updateFlightsState()
             }
     }
 
@@ -180,6 +180,7 @@ class FlightSearchViewModel(
             _homeUiState.update {
                 it.copy(selectedDepartAirport = airport)
             }
+            updateFlightsState()
         }
     }
 
