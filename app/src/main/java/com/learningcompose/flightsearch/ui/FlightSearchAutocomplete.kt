@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 object FlightAutocompleteDestination : NavigationDestination {
@@ -68,6 +69,7 @@ fun FlightSearchAutocompleteItems(
                                 keyboardController?.hide()
                             }
                         )
+                        .testTag("${airport.iAtaCode}-${airport.airportName}")
                 ) {
                     Text(
                         text = airport.iAtaCode,
